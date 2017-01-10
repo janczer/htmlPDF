@@ -5,12 +5,24 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"strings"
+	"unicode"
 )
 
 func main() {
-	source := "<html><title>Test</title><body><div class='test' id='divdiv'>First div</div></body></html>"
-	fmt.Println(source)
-	r := bytes.NewReader([]byte(source))
+	xmlFile, err := ioutil.ReadFile("test.xml")
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+	xmlPure := strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, string(xmlFile))
+	r := bytes.NewReader([]byte(xmlPure))
 	d := xml.NewDecoder(r)
 	var t int = 0
 	for {
