@@ -4,33 +4,51 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/jung-kurt/gofpdf"
+	//"github.com/jung-kurt/gofpdf"
 	"io"
 	"io/ioutil"
 	"strings"
 )
 
 type Node struct {
-	Name string
-	Opt  Options
-	Text string
+	name string
+	text string
+	parent *Node
+	child []*Node
 }
 
-type Options struct {
-	fontSize float64
-	m_left   float64
-	m_top    float64
-	m_right  float64
-	m_bottom float64
+func (n *Node) Start(name string) *Node {
+	tmp := new(Node)
+	tmp.parent = n
+	tmp.name = name
+	return tmp
 }
 
-type Nodes struct {
-	n []Node
+func (n *Node) AddText(text string) {
+	n.text = text
 }
 
-func (n *Nodes) Add(nn Node) []Node {
-	n.n = append(n.n, nn)
-	return n.n
+func (n *Node) Stop() *Node {
+	n.parent.child = append(n.parent.child, n)
+	return n.parent
+}
+
+func (n *Node) Print(level int) {
+	tab(level)
+	level++
+	fmt.Printf("<%s>\n", n.name)
+	if len(n.text) > 0 {
+		tab(level+1)
+		fmt.Printf("%s\n", n.text)
+	}
+	if len(n.child) > 0 {
+		for i := 0; i < len(n.child); i++ {
+			n.child[i].Print(level)
+		}
+	}
+	level--
+	tab(level)
+	fmt.Printf("</%s>\n", n.name)
 }
 
 func main() {
@@ -39,23 +57,13 @@ func main() {
 		fmt.Println("Error opening file:", err)
 		return
 	}
-	//	xmlPure := strings.Map(func(r rune) rune {
-	//		if unicode.IsSpace(r) {
-	//			return -1
-	//		}
-	//		return r
-	//	}, string(xmlFile))
 
 	xmlstring := strings.Replace(string(xmlFile), "\n", "", -1)
 	xmlstring = strings.Replace(string(xmlstring), "\r", "", -1)
 	r := bytes.NewReader([]byte(xmlstring))
 	d := xml.NewDecoder(r)
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
 
-	var n Node
-	var nnn Nodes
+	n := new(Node)
 
 	var t int = 0
 	for {
@@ -73,41 +81,46 @@ func main() {
 			tab(t)
 			t++
 			fmt.Printf("Name: %s, Attr: %v\n", start.Name, start.Attr)
-			n.Name = start.Name.Local
+			n = n.Start(start.Name.Local)
 		case xml.EndElement:
 			t--
 			tab(t)
 			end := token.(xml.EndElement)
 			fmt.Println(end)
-			nnn.Add(n)
+			n = n.Stop()
 		case xml.CharData:
 			tab(t)
 			text := token.(xml.CharData)
 			fmt.Printf("%s\n", text)
-			n.Text = string(text)
+			n.AddText(string(text))
 		}
 	}
-	fmt.Println(nnn.n)
 
-	switch n.Name {
-	case "h1":
-		n.Opt.fontSize = 32
-		n.Opt.m_left = 20
-		n.Opt.m_top = 10
-	}
-	pdf.SetFontSize(n.Opt.fontSize)
-	x, y := pdf.GetXY()
-	pdf.Text(x+n.Opt.m_left, y+n.Opt.m_top, n.Text)
-	err = pdf.OutputFileAndClose("hello.pdf")
-	if err != nil {
-		fmt.Println("Problem z tworzeniem pdf", err)
-	}
+	n.Print(0)
 
-	fmt.Println(n)
+
+	//switch n.Name {
+	//case "h1":
+	//	n.Opt.fontSize = 32
+	//	n.Opt.m_left = 20
+	//	n.Opt.m_top = 10
+	//}
+	////Generate PDF Start
+	//pdf := gofpdf.New("P", "mm", "A4", "")
+	//pdf.AddPage()
+	//pdf.SetFont("Arial", "B", 16)
+	//pdf.SetFontSize(n.Opt.fontSize)
+	//x, y := pdf.GetXY()
+	//pdf.Text(x + n.Opt.m_left, y + n.Opt.m_top, n.Text)
+	//err = pdf.OutputFileAndClose("hello.pdf")
+	//if err != nil {
+	//	fmt.Println("Problem z tworzeniem pdf", err)
+	//}
+	////Generate PDF End
 }
 
 func tab(i int) {
 	for j := 0; j < i; j++ {
-		fmt.Printf("\t")
+		fmt.Printf("    ")
 	}
 }
