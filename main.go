@@ -4,52 +4,11 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	//"github.com/jung-kurt/gofpdf"
+	"github.com/jung-kurt/gofpdf"
 	"io"
 	"io/ioutil"
 	"strings"
 )
-
-type Node struct {
-	name string
-	text string
-	parent *Node
-	child []*Node
-}
-
-func (n *Node) Start(name string) *Node {
-	tmp := new(Node)
-	tmp.parent = n
-	tmp.name = name
-	return tmp
-}
-
-func (n *Node) AddText(text string) {
-	n.text = text
-}
-
-func (n *Node) Stop() *Node {
-	n.parent.child = append(n.parent.child, n)
-	return n.parent
-}
-
-func (n *Node) Print(level int) {
-	tab(level)
-	level++
-	fmt.Printf("<%s>\n", n.name)
-	if len(n.text) > 0 {
-		tab(level+1)
-		fmt.Printf("%s\n", n.text)
-	}
-	if len(n.child) > 0 {
-		for i := 0; i < len(n.child); i++ {
-			n.child[i].Print(level)
-		}
-	}
-	level--
-	tab(level)
-	fmt.Printf("</%s>\n", n.name)
-}
 
 func main() {
 	xmlFile, err := ioutil.ReadFile("test.xml")
@@ -95,27 +54,17 @@ func main() {
 			n.AddText(string(text))
 		}
 	}
+	n = n.child[0]
 
 	n.Print(0)
 
-
-	//switch n.Name {
-	//case "h1":
-	//	n.Opt.fontSize = 32
-	//	n.Opt.m_left = 20
-	//	n.Opt.m_top = 10
-	//}
-	////Generate PDF Start
-	//pdf := gofpdf.New("P", "mm", "A4", "")
-	//pdf.AddPage()
-	//pdf.SetFont("Arial", "B", 16)
-	//pdf.SetFontSize(n.Opt.fontSize)
-	//x, y := pdf.GetXY()
-	//pdf.Text(x + n.Opt.m_left, y + n.Opt.m_top, n.Text)
-	//err = pdf.OutputFileAndClose("hello.pdf")
-	//if err != nil {
-	//	fmt.Println("Problem z tworzeniem pdf", err)
-	//}
+	//Generate PDF Start
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf = n.PrintSelf(pdf)
+	err = pdf.OutputFileAndClose("hello.pdf")
+	if err != nil {
+		fmt.Println("Error pdf", err)
+	}
 	////Generate PDF End
 }
 
