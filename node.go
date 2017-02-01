@@ -6,12 +6,13 @@ import (
 )
 
 type Node struct {
-	name string
-	text string
+	name        string
+	text        string
 	margin_left int
-	margin_top int
-	parent *Node
-	child []*Node
+	margin_top  int
+	block       bool
+	parent      *Node
+	child       []*Node
 }
 
 func (n *Node) Start(name string) *Node {
@@ -20,12 +21,16 @@ func (n *Node) Start(name string) *Node {
 	tmp.name = name
 	switch name {
 	case "div":
-		tmp.margin_top = 5 + n.margin_top
-		tmp.margin_left = 10 + n.margin_left
+		tmp.block = true
+	//	tmp.margin_top = 5 + n.margin_top
+	//	tmp.margin_left = 10 + n.margin_left
 	case "h1":
-		tmp.margin_top = 5 + n.margin_top
-		tmp.margin_left = 5 + n.margin_left
-		n.margin_top += 5
+		tmp.block = true
+		//	tmp.margin_top = 5 + n.margin_top
+		//	tmp.margin_left = 5 + n.margin_left
+		//	n.margin_top += 5
+	case "b":
+		tmp.block = false
 	}
 	return tmp
 }
@@ -44,7 +49,7 @@ func (n *Node) Print(level int) {
 	level++
 	fmt.Printf("<%s>\n", n.name)
 	if len(n.text) > 0 {
-		tab(level+1)
+		tab(level + 1)
 		fmt.Printf("%s\n", n.text)
 	}
 	if len(n.child) > 0 {
@@ -66,15 +71,35 @@ func (n *Node) PrintSelf(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
+var newline bool
+
+func setNewLine(pdf *gofpdf.Fpdf) {
+	if !newline {
+		y := pdf.GetY()
+		pdf.SetY(y + 10)
+		pdf.SetX(10)
+		newline = true
+	}
+}
+
 func (n *Node) pdf(pdf *gofpdf.Fpdf) {
 	switch n.name {
 	case "div":
-		x, y := pdf.GetXY()
-		pdf.SetXY(x + float64(n.margin_left), y + float64(n.margin_top))
+		//x, y := pdf.GetXY()
+		//pdf.SetXY(x+float64(n.margin_left), y+float64(n.margin_top))
+		setNewLine(pdf)
 	case "h1":
-		pdf.Text(float64(n.margin_left), float64(n.margin_top), n.text)
+		setNewLine(pdf)
+		pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
+		y := pdf.GetY()
+		pdf.SetY(y + 10)
+	case "b":
+		pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
+		x := pdf.GetX()
+		pdf.SetX(x + pdf.GetStringWidth(n.text) + 1)
+		newline = false
 	}
-	for i:=0; i < len(n.child); i++ {
+	for i := 0; i < len(n.child); i++ {
 		n.child[i].pdf(pdf)
 	}
 }
