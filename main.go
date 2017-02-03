@@ -60,6 +60,7 @@ func main() {
 
 	//Generate PDF Start
 	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.SetFont("Arial", "", 12)
 	pdf = n.PrintSelf(pdf)
 	err = pdf.OutputFileAndClose("hello.pdf")
 	if err != nil {

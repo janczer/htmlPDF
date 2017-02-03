@@ -6,32 +6,17 @@ import (
 )
 
 type Node struct {
-	name        string
-	text        string
-	margin_left int
-	margin_top  int
-	block       bool
-	parent      *Node
-	child       []*Node
+	name   string
+	text   string
+	parent *Node
+	child  []*Node
 }
 
 func (n *Node) Start(name string) *Node {
 	tmp := new(Node)
 	tmp.parent = n
 	tmp.name = name
-	switch name {
-	case "div":
-		tmp.block = true
-	//	tmp.margin_top = 5 + n.margin_top
-	//	tmp.margin_left = 10 + n.margin_left
-	case "h1":
-		tmp.block = true
-		//	tmp.margin_top = 5 + n.margin_top
-		//	tmp.margin_left = 5 + n.margin_left
-		//	n.margin_top += 5
-	case "b":
-		tmp.block = false
-	}
+
 	return tmp
 }
 
@@ -62,10 +47,15 @@ func (n *Node) Print(level int) {
 	fmt.Printf("</%s>\n", n.name)
 }
 
+var pageFontSize float64 = 12
+
 func (n *Node) PrintSelf(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 	pdf.SetFontSize(16)
+	fmt.Println(pdf.GetXY())
+	pdf.SetXY(0, 0)
+	fmt.Println(pdf.GetXY())
 	n.pdf(pdf)
 
 	return pdf
@@ -77,29 +67,79 @@ func setNewLine(pdf *gofpdf.Fpdf) {
 	if !newline {
 		y := pdf.GetY()
 		pdf.SetY(y + 10)
-		pdf.SetX(10)
 		newline = true
 	}
 }
 
 func (n *Node) pdf(pdf *gofpdf.Fpdf) {
+	parseChilder := true
+	pdf.SetFont("Arial", "", pageFontSize)
 	switch n.name {
 	case "div":
-		//x, y := pdf.GetXY()
-		//pdf.SetXY(x+float64(n.margin_left), y+float64(n.margin_top))
 		setNewLine(pdf)
-	case "h1":
-		setNewLine(pdf)
-		pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
-		y := pdf.GetY()
-		pdf.SetY(y + 10)
+	case "h1", "h2", "h3", "h4", "h5", "h6":
+		drawHX(pdf, n)
 	case "b":
+		pdf.SetFont("Arial", "B", pageFontSize)
 		pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
 		x := pdf.GetX()
 		pdf.SetX(x + pdf.GetStringWidth(n.text) + 1)
 		newline = false
+	case "table":
+		setNewLine(pdf)
+		drawTable(pdf, n)
+		parseChilder = false
 	}
+	if parseChilder {
+		for i := 0; i < len(n.child); i++ {
+			n.child[i].pdf(pdf)
+		}
+	}
+}
+
+func drawHX(pdf *gofpdf.Fpdf, n *Node) {
+	var fontSize float64
+	switch n.name {
+	case "h1":
+		fontSize = 18
+	case "h2":
+		fontSize = 16
+	case "h3":
+		fontSize = 14
+	case "h4", "h5", "h6":
+		fontSize = 12
+	}
+	pdf.SetFont("Arial", "B", fontSize)
+	setNewLine(pdf)
+	pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
+	y := pdf.GetY()
+	pdf.SetY(y + 10)
+}
+
+func drawTable(pdf *gofpdf.Fpdf, n *Node) {
+	t := make(map[int]float64)
 	for i := 0; i < len(n.child); i++ {
-		n.child[i].pdf(pdf)
+		t = drawTr(pdf, n.child[i], t)
 	}
+	y := pdf.GetY()
+	_, fontSize := pdf.GetFontSize()
+	pdf.SetY(y + fontSize)
+}
+
+func drawTr(pdf *gofpdf.Fpdf, n *Node, t map[int]float64) map[int]float64 {
+	y := pdf.GetY()
+	_, fontSize := pdf.GetFontSize()
+	pdf.SetY(y + fontSize)
+
+	for i := 0; i < len(n.child); i++ {
+		pdf.Text(pdf.GetX(), pdf.GetY(), n.child[i].text)
+		x := pdf.GetX()
+		stringSize := pdf.GetStringWidth(n.child[i].text)
+		if t[i] < stringSize {
+			t[i] = stringSize
+		}
+		pdf.SetX(x + t[i] + 1)
+	}
+
+	return t
 }
