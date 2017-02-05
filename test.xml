@@ -17,6 +17,8 @@
             </tr>
         </table>
         <b>bold second</b>
+        <i> italic</i>
+        <p>Paragraph with <i>italic</i></p>
     </div>
     <div>
         <h1>H1 test</h1>
