@@ -6,21 +6,25 @@ import (
 
 type Node struct {
 	name   string
-	text   string //tado change string to map[int64]string 0 first text, 1 text after first child, 2 ...
+	text   map[int64]string
+	number int64
 	parent *Node
-	child  []*Node //todo change []*Node to map[int64]*Node
+	child  []*Node
 }
 
 func (n *Node) Start(name string) *Node {
 	tmp := new(Node)
 	tmp.parent = n
 	tmp.name = name
+	tmp.number = 0
+	tmp.text = make(map[int64]string)
 
 	return tmp
 }
 
 func (n *Node) AddText(text string) {
-	n.text = text
+	n.text[n.number] = text
+	n.number++
 }
 
 func (n *Node) Stop() *Node {

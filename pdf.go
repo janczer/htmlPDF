@@ -81,13 +81,13 @@ func drawP(pdf *gofpdf.Fpdf, n *Node) {
 	_, fontSizeMM := pdf.GetFontSize()
 	pdf.SetY(y + fontSizeMM + marginTop)
 
-	pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
+	pdf.Text(pdf.GetX(), pdf.GetY(), n.text[0])
 
 	x := pdf.GetX()
-	pdf.SetX(x + pdf.GetStringWidth(n.text) + 1)
+	pdf.SetX(x + pdf.GetStringWidth(n.text[0]) + 1)
 
 	y = pdf.GetY()
-	pdf.SetXY(x+pdf.GetStringWidth(n.text)+1, y+marginBottom)
+	pdf.SetXY(x+pdf.GetStringWidth(n.text[0])+1, y+marginBottom)
 
 	lastMargin = marginBottom
 	fmt.Println("p")
@@ -121,7 +121,7 @@ func drawHX(pdf *gofpdf.Fpdf, n *Node) {
 	_, fontSizeMM := pdf.GetFontSize()
 	pdf.SetY(y + fontSizeMM + marginTop)
 
-	pdf.Text(pdf.GetX(), pdf.GetY(), n.text)
+	pdf.Text(pdf.GetX(), pdf.GetY(), n.text[0])
 
 	y = pdf.GetY()
 	pdf.SetY(y + marginBottom)
@@ -133,7 +133,7 @@ func drawTable(pdf *gofpdf.Fpdf, n *Node) {
 	for i := 0; i < len(n.child); i++ {
 		tmp := n.child[i]
 		for j := 0; j < len(tmp.child); j++ {
-			stringSize := pdf.GetStringWidth(tmp.child[j].text)
+			stringSize := pdf.GetStringWidth(tmp.child[j].text[0])
 			if t[i] < stringSize {
 				t[i] = stringSize
 			}
@@ -154,7 +154,7 @@ func drawTr(pdf *gofpdf.Fpdf, n *Node, t map[int]float64) {
 	pdf.SetY(y + fontSize)
 
 	for i := 0; i < len(n.child); i++ {
-		pdf.Text(pdf.GetX(), pdf.GetY(), n.child[i].text)
+		pdf.Text(pdf.GetX(), pdf.GetY(), n.child[i].text[0])
 		x := pdf.GetX()
 		pdf.SetX(x + t[i] + 1)
 	}
