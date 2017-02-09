@@ -22,9 +22,10 @@ func main() {
 	r := bytes.NewReader([]byte(xmlstring))
 	d := xml.NewDecoder(r)
 
-	n := new(Node)
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.SetFont("Arial", "B", 16)
+	pdf.AddPage()
 
-	var t int = 0
 	for {
 		token, err := d.Token()
 		if err == io.EOF {
@@ -37,34 +38,20 @@ func main() {
 		switch token.(type) {
 		case xml.StartElement:
 			start := token.(xml.StartElement)
-			tab(t)
-			t++
-			fmt.Printf("Name: %s, Attr: %v\n", start.Name, start.Attr)
-			n = n.Start(start.Name.Local)
+			printElement(pdf, start.Name.Local)
 		case xml.EndElement:
-			t--
-			tab(t)
 			end := token.(xml.EndElement)
-			fmt.Println(end)
-			n = n.Stop()
+			printEndElement(pdf, end.Name.Local)
 		case xml.CharData:
-			tab(t)
-			text := token.(xml.CharData)
-			fmt.Printf("%s\n", text)
-			n.AddText(string(text))
+			text := string(token.(xml.CharData))
+			printText(pdf, strings.TrimSpace(text))
 		}
 	}
-	n = n.child[0]
-
-	n.Print(0)
 
 	//Generate PDF Start
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.SetFont("Arial", "", 12)
-	pdf = n.PrintSelf(pdf)
 	err = pdf.OutputFileAndClose("hello.pdf")
 	if err != nil {
-		fmt.Println("Error pdf", err)
+		fmt.Println("Error with generate pdf", err)
 	}
 	////Generate PDF End
 }
