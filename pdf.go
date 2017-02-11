@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 var pageFontSize float64 = 12
@@ -16,6 +17,9 @@ var table bool = false
 var tr bool = false
 var td bool = false
 var t *Table
+var countList int = 0
+var ol bool = false
+var ul bool = false
 
 func printElement(name string) {
 	actualElement = name
@@ -34,6 +38,20 @@ func printElement(name string) {
 		tr = true
 	case "td":
 		td = true
+	case "b", "i", "span", "a":
+		addSpace()
+	case "br":
+		newline = false
+		setNewLine()
+	case "ol":
+		ol = true
+		countList = 0
+		setNewLine()
+	case "ul":
+		ul = true
+		countList = 0
+	case "li":
+		countList++
 	}
 }
 
@@ -50,13 +68,30 @@ func printText(text string) {
 	switch actualElement {
 	case "b":
 		pageFontStyle = "B"
+		drawText(text)
 	case "i":
 		pageFontStyle = "I"
+		drawText(text)
 	case "h1", "h2", "h3", "h4", "h5", "h6":
 		drawHX(text)
+	case "snap", "a", "p":
+		drawText(text)
+	case "br", "ul", "ol":
 		return
+	case "li":
+		fmt.Println(countList)
+		var before string
+		if ul {
+			before = "* "
+		}
+		if ol {
+			before = strconv.Itoa(countList) + ". "
+		}
+		fmt.Println(before)
+		drawText(before + text)
+	default:
+		drawText(text)
 	}
-	drawText(text)
 }
 
 func printEndElement(name string) {
@@ -76,8 +111,18 @@ func printEndElement(name string) {
 		tr = false
 	case "td":
 		td = false
-	case "b", "i":
-		pageFontStyle = ""
+	case "b", "i", "span", "a":
+		addSpace()
+	case "li":
+		setNewLine()
+	}
+	pageFontStyle = ""
+}
+
+func addSpace() {
+	if !newline {
+		x := pdf.GetX()
+		pdf.SetX(x + pdf.GetStringWidth(" "))
 	}
 }
 

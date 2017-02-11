@@ -2,7 +2,21 @@
     <div>
         <div>
             <a>test a</a>
-            <p>Test paragraph with <b>bold</b> and <i>italic</i></p>
+            <p>Test paragraph with <b>bold</b> and <i>italic</i>. Test <span>span</span> tag</p>
+            <p>Test <i>italic</i> after tag</p>
+            <b>test space bold</b>
+        </div>
+        <br/>
+        <br/>
+        <div>
+            <ul>
+                <li>first</li>
+                <li>second</li>
+            </ul>
+            <ol>
+                <li>first</li>
+                <li>second</li>
+            </ol>
         </div>
         <table>
             <tr>
@@ -24,5 +38,13 @@
                 <td> and new line</td>
             </tr>
         </table>
+        <div>
+            <h1>H1 test</h1>
+            <h2>H2 test</h2>
+            <h3>H3 test</h3>
+            <h4>H4 test</h4>
+            <h5>H5 test</h5>
+            <h6>H6 test</h6>
+        </div>
     </div>
 </page>

@@ -2,23 +2,24 @@
 
 Supports primary HTML tags:
 
-- [ ] div
-- [ ] p
-- [ ] table
-- [ ] tr
-- [ ] td
-- [ ] b
-- [ ] span
-- [ ] a
-- [ ] h1
-- [ ] h2
-- [ ] h3
-- [ ] h4
-- [ ] h5
+- [x] div
+- [x] p
+- [x] table
+- [x] tr
+- [x] td
+- [x] b
+- [x] span
+- [x] a
+- [x] h1
+- [x] h2
+- [x] h3
+- [x] h4
+- [x] h5
 - [ ] img
-- [ ] br
-- [ ] ul
-- [ ] li
+- [x] br
+- [x] ul
+- [x] ol
+- [x] li
 
 Support attributes:
 
@@ -40,6 +41,6 @@ Support attributes:
 - [ ] border
 - [ ] background
 
-Support barcodes
+[ ] Support barcodes
 
 
