@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jung-kurt/gofpdf"
+	"fmt"
 )
 
 var pageFontSize float64 = 12
@@ -12,21 +12,39 @@ var newline bool
 var actualElement string
 var end bool
 var start bool
+var table bool = false
+var tr bool = false
+var td bool = false
+var t *Table
 
-func printElement(pdf *gofpdf.Fpdf, name string) {
+func printElement(name string) {
 	actualElement = name
 	switch name {
 	case "div":
-		setNewLine(pdf)
+		setNewLine()
 	case "p":
-		setNewLine(pdf)
+		setNewLine()
 	case "h1", "h2", "h3", "h4", "h5", "h6":
-		setNewLine(pdf)
+		setNewLine()
+	case "table":
+		table = true
+		t = NewTable()
+	case "tr":
+		t.startTr()
+		tr = true
+	case "td":
+		td = true
 	}
 }
 
-func printText(pdf *gofpdf.Fpdf, text string) {
+func printText(text string) {
 	if len(text) <= 0 || actualElement == "div" || actualElement == "page" {
+		return
+	}
+	if table || tr {
+		if td {
+			t.addTd(text)
+		}
 		return
 	}
 	switch actualElement {
@@ -35,27 +53,35 @@ func printText(pdf *gofpdf.Fpdf, text string) {
 	case "i":
 		pageFontStyle = "I"
 	case "h1", "h2", "h3", "h4", "h5", "h6":
-		drawHX(pdf, text)
+		drawHX(text)
 		return
-	default:
-		pageFontStyle = ""
 	}
-	drawText(pdf, text)
+	drawText(text)
 }
 
-func printEndElement(pdf *gofpdf.Fpdf, name string) {
+func printEndElement(name string) {
 	actualElement = ""
 	switch name {
 	case "div":
-		setNewLine(pdf)
+		setNewLine()
 	case "p":
-		setNewLine(pdf)
+		setNewLine()
 	case "h1", "h2", "h3", "h4", "h5", "h6":
-		setNewLine(pdf)
+		setNewLine()
+	case "table":
+		table = false
+		t.printSelf()
+	case "tr":
+		t.endTr()
+		tr = false
+	case "td":
+		td = false
+	case "b", "i":
+		pageFontStyle = ""
 	}
 }
 
-func drawText(pdf *gofpdf.Fpdf, text string) {
+func drawText(text string) {
 	pdf.SetFont(pageFontFamily, pageFontStyle, pageFontSize)
 	pdf.Text(pdf.GetX(), pdf.GetY(), text)
 	x := pdf.GetX()
@@ -63,7 +89,8 @@ func drawText(pdf *gofpdf.Fpdf, text string) {
 	newline = false
 }
 
-func drawHX(pdf *gofpdf.Fpdf, text string) {
+func drawHX(text string) {
+	fmt.Println("drawHX")
 	var fontSize float64
 	pageFontStyle = "B"
 	switch actualElement {
@@ -83,48 +110,11 @@ func drawHX(pdf *gofpdf.Fpdf, text string) {
 	newline = false
 }
 
-func setNewLine(pdf *gofpdf.Fpdf) {
+func setNewLine() {
 	if !newline {
 		y := pdf.GetY()
 		_, fontSize := pdf.GetFontSize()
 		pdf.SetY(y + fontSize)
 		newline = true
 	}
-
 }
-
-//------------------
-//------table-------
-//------------------
-
-//func drawTable(pdf *gofpdf.Fpdf, n *Node) {
-//	t := make(map[int]float64)
-//	for i := 0; i < len(n.child); i++ {
-//		tmp := n.child[i]
-//		for j := 0; j < len(tmp.child); j++ {
-//			stringSize := pdf.GetStringWidth(tmp.child[j].text[0])
-//			if t[i] < stringSize {
-//				t[i] = stringSize
-//			}
-//		}
-//	}
-//	fmt.Println(t)
-//	for i := 0; i < len(n.child); i++ {
-//		drawTr(pdf, n.child[i], t)
-//	}
-//	y := pdf.GetY()
-//	_, fontSize := pdf.GetFontSize()
-//	pdf.SetY(y + fontSize)
-//}
-//
-//func drawTr(pdf *gofpdf.Fpdf, n *Node, t map[int]float64) {
-//	y := pdf.GetY()
-//	_, fontSize := pdf.GetFontSize()
-//	pdf.SetY(y + fontSize)
-//
-//	for i := 0; i < len(n.child); i++ {
-//		pdf.Text(pdf.GetX(), pdf.GetY(), n.child[i].text[0])
-//		x := pdf.GetX()
-//		pdf.SetX(x + t[i] + 1)
-//	}
-//}

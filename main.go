@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+//global pointer to pdf
+var pdf *gofpdf.Fpdf
+
 func main() {
 	xmlFile, err := ioutil.ReadFile("test.xml")
 	if err != nil {
@@ -22,7 +25,7 @@ func main() {
 	r := bytes.NewReader([]byte(xmlstring))
 	d := xml.NewDecoder(r)
 
-	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf = gofpdf.New("P", "mm", "A4", "")
 	pdf.SetFont("Arial", "B", 16)
 	pdf.AddPage()
 
@@ -38,13 +41,13 @@ func main() {
 		switch token.(type) {
 		case xml.StartElement:
 			start := token.(xml.StartElement)
-			printElement(pdf, start.Name.Local)
+			printElement(start.Name.Local)
 		case xml.EndElement:
 			end := token.(xml.EndElement)
-			printEndElement(pdf, end.Name.Local)
+			printEndElement(end.Name.Local)
 		case xml.CharData:
 			text := string(token.(xml.CharData))
-			printText(pdf, strings.TrimSpace(text))
+			printText(strings.TrimSpace(text))
 		}
 	}
 
@@ -54,10 +57,4 @@ func main() {
 		fmt.Println("Error with generate pdf", err)
 	}
 	////Generate PDF End
-}
-
-func tab(i int) {
-	for j := 0; j < i; j++ {
-		fmt.Printf("    ")
-	}
 }
