@@ -1,4 +1,4 @@
-package main
+package htmlPDF
 
 import (
 	"bytes"
@@ -13,8 +13,9 @@ import (
 //global pointer to pdf
 var pdf *gofpdf.Fpdf
 
-func main() {
-	xmlFile, err := ioutil.ReadFile("test.xml")
+func Generate(in string, out string) {
+	fmt.Println(in, out)
+	xmlFile, err := ioutil.ReadFile(in)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
@@ -52,7 +53,7 @@ func main() {
 	}
 
 	//Generate PDF Start
-	err = pdf.OutputFileAndClose("hello.pdf")
+	err = pdf.OutputFileAndClose(out)
 	if err != nil {
 		fmt.Println("Error with generate pdf", err)
 	}

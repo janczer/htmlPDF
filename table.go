@@ -1,4 +1,4 @@
-package main
+package htmlPDF
 
 type Table struct {
 	n        int64 //tr
