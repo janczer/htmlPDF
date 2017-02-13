@@ -48,6 +48,6 @@ func (t *Table) printSelf() {
 			pdf.SetX(x + t.col[j] + 2)
 			newline = false
 		}
-		setNewLine()
+		setNewLine(false)
 	}
 }

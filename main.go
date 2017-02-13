@@ -42,10 +42,10 @@ func Generate(in string, out string) {
 		switch token.(type) {
 		case xml.StartElement:
 			start := token.(xml.StartElement)
-			printElement(start.Name.Local)
+			startElement(start.Name.Local)
 		case xml.EndElement:
 			end := token.(xml.EndElement)
-			printEndElement(end.Name.Local)
+			endElement(end.Name.Local)
 		case xml.CharData:
 			text := string(token.(xml.CharData))
 			printText(strings.TrimSpace(text))

@@ -3,6 +3,7 @@ package htmlPDF
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var pageFontSize float64 = 12
@@ -10,43 +11,42 @@ var pageFontFamily string = "Helvetica"
 var pageFontColor string = "black"
 var pageFontStyle string = "" //B - bold or I - italic or U - underscore
 var newline bool
+
+var beforElement string
 var actualElement string
-var end bool
-var start bool
-var table bool = false
-var tr bool = false
-var td bool = false
+
+var lastMarginTop float64
+var marginTop float64
+
+var marginBottop float64
+
 var t *Table
 var countList int = 0
 var ol bool = false
 var ul bool = false
 
-func printElement(name string) {
+func startElement(name string) {
+	beforElement = actualElement
 	actualElement = name
 	switch name {
-	case "div":
-		setNewLine()
-	case "p":
-		setNewLine()
 	case "h1", "h2", "h3", "h4", "h5", "h6":
-		setNewLine()
+		marginTop = 12
+		marginBottop = 12
+	case "p":
+		marginTop = 12
+		marginBottop = 12
+	case "a":
 	case "table":
-		table = true
 		t = NewTable()
 	case "tr":
 		t.startTr()
-		tr = true
-	case "td":
-		td = true
-	case "b", "i", "span", "a":
+	case "b", "i", "span":
 		addSpace()
 	case "br":
-		newline = false
-		setNewLine()
+		setNewLine(true)
 	case "ol":
 		ol = true
 		countList = 0
-		setNewLine()
 	case "ul":
 		ul = true
 		countList = 0
@@ -59,62 +59,50 @@ func printText(text string) {
 	if len(text) <= 0 || actualElement == "div" || actualElement == "page" {
 		return
 	}
-	if table || tr {
-		if td {
-			t.addTd(text)
-		}
-		return
-	}
+
 	switch actualElement {
-	case "b":
-		pageFontStyle = "B"
-		drawText(text)
-	case "i":
-		pageFontStyle = "I"
-		drawText(text)
-	case "h1", "h2", "h3", "h4", "h5", "h6":
-		drawHX(text)
-	case "snap", "a", "p":
-		drawText(text)
-	case "br", "ul", "ol":
-		return
+	case "b", "i":
+		pageFontStyle = strings.ToUpper(actualElement)
 	case "li":
-		fmt.Println(countList)
-		var before string
 		if ul {
-			before = "* "
+			text = "* " + text
 		}
 		if ol {
-			before = strconv.Itoa(countList) + ". "
+			text = strconv.Itoa(countList) + ". " + text
 		}
-		fmt.Println(before)
-		drawText(before + text)
-	default:
-		drawText(text)
+	case "h1", "h2", "h3", "h4", "h5", "h6":
+		setStyleHX()
+	case "td":
+		t.addTd(text)
+		return
+	case "br", "ul", "ol":
+		return
 	}
+
+	drawText(text)
 }
 
-func printEndElement(name string) {
-	actualElement = ""
+func endElement(name string) {
+	marginTop = 0
+	actualElement = beforElement
 	switch name {
 	case "div":
-		setNewLine()
+		setNewLine(false)
 	case "p":
-		setNewLine()
-	case "h1", "h2", "h3", "h4", "h5", "h6":
-		setNewLine()
+		setNewLine(false)
+	case "a":
+		setNewLine(false)
+	case "h1", "h2", "h3", "h4", "h5", "h6", "li":
+		setNewLine(false)
 	case "table":
-		table = false
 		t.printSelf()
 	case "tr":
 		t.endTr()
-		tr = false
-	case "td":
-		td = false
-	case "b", "i", "span", "a":
+	case "b", "i", "span":
 		addSpace()
-	case "li":
-		setNewLine()
+	case "ol", "ul":
+		ol = false
+		ul = false
 	}
 	pageFontStyle = ""
 }
@@ -127,39 +115,37 @@ func addSpace() {
 }
 
 func drawText(text string) {
+	pdf.SetXY(pdf.GetX(), pdf.GetY()+marginTop)
+
 	pdf.SetFont(pageFontFamily, pageFontStyle, pageFontSize)
+
 	pdf.Text(pdf.GetX(), pdf.GetY(), text)
-	x := pdf.GetX()
-	pdf.SetX(x + pdf.GetStringWidth(text))
+	pdf.SetX(pdf.GetX() + pdf.GetStringWidth(text))
 	newline = false
 }
 
-func drawHX(text string) {
+func setStyleHX() {
 	fmt.Println("drawHX")
-	var fontSize float64
 	pageFontStyle = "B"
 	switch actualElement {
 	case "h1":
-		fontSize = 18
+		pageFontSize = 18
 	case "h2":
-		fontSize = 16
+		pageFontSize = 16
 	case "h3":
-		fontSize = 14
+		pageFontSize = 14
 	case "h4":
-		fontSize = 12
+		pageFontSize = 12
 	case "h5", "h6":
-		fontSize = 10
+		pageFontSize = 10
 	}
-	pdf.SetFont(pageFontFamily, pageFontStyle, fontSize)
-	pdf.Text(pdf.GetX(), pdf.GetY(), text)
-	newline = false
 }
 
-func setNewLine() {
-	if !newline {
+func setNewLine(force bool) {
+	if !newline || force {
 		y := pdf.GetY()
 		_, fontSize := pdf.GetFontSize()
-		pdf.SetY(y + fontSize)
+		pdf.SetY(y + fontSize + marginTop)
 		newline = true
 	}
 }
