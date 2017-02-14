@@ -58,7 +58,13 @@ func (n *Node) print(l int) {
 	l++
 	fmt.Printf("%s text: %s\n", n.node_type.element.tag_name, n.node_type.text)
 	for i := 0; i < len(n.children); i++ {
-		n.children[i].print(l)
+		switch str := n.children[i].(type) {
+		case *Node:
+			str.print(l + 1)
+		case string:
+			tab(l)
+			fmt.Printf("text: %s\n", str)
+		}
 	}
 }
 

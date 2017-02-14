@@ -2,7 +2,7 @@ package htmlPDF
 
 type Node struct {
 	parent    *Node
-	children  map[int]*Node
+	children  map[int]interface{}
 	node_type NodeType
 }
 
@@ -19,7 +19,7 @@ type ElementData struct {
 func (n *Node) Start(name string) *Node {
 	t := new(Node)
 	t.parent = n
-	t.children = make(map[int]*Node)
+	t.children = make(map[int]interface{})
 	t.node_type = NodeType{element: ElementData{tag_name: name}}
 	return t
 }
@@ -34,20 +34,20 @@ func (n *Node) Stop() *Node {
 func (n *Node) AddText(text string) {
 	if len(text) > 0 {
 		i := len(n.children)
-		n.children[i] = createNodeText(text)
+		n.children[i] = text
 	}
 }
 
 func createNodeText(data string) *Node {
 	return &Node{
-		children:  make(map[int]*Node),
+		children:  make(map[int]interface{}),
 		node_type: NodeType{text: data},
 	}
 }
 
 func NewNode() *Node {
 	return &Node{
-		children: make(map[int]*Node),
+		children: make(map[int]interface{}),
 		node_type: NodeType{
 			element: ElementData{
 				attrs: make(map[string]string),
