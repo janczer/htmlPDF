@@ -13,23 +13,10 @@ import (
 //global pointer to pdf
 var pdf *gofpdf.Fpdf
 
-func Generate(in string, out string) {
-	fmt.Println(in, out)
-	xmlFile, err := ioutil.ReadFile(in)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
-	}
-
-	xmlstring := strings.Replace(string(xmlFile), "\n", "", -1)
-	xmlstring = strings.Replace(string(xmlstring), "\r", "", -1)
-	r := bytes.NewReader([]byte(xmlstring))
+func parse(source string) {
+	r := bytes.NewReader([]byte(source))
 	d := xml.NewDecoder(r)
-
-	pdf = gofpdf.New("P", "mm", "A4", "")
-	pdf.SetFont("Arial", "B", 16)
-	pdf.AddPage()
-
+	n := NewNode()
 	for {
 		token, err := d.Token()
 		if err == io.EOF {
@@ -42,15 +29,55 @@ func Generate(in string, out string) {
 		switch token.(type) {
 		case xml.StartElement:
 			start := token.(xml.StartElement)
-			startElement(start.Name.Local)
+			fmt.Printf("start %s\n", start.Name.Local)
+			n = n.Start(start.Name.Local)
 		case xml.EndElement:
-			end := token.(xml.EndElement)
-			endElement(end.Name.Local)
+			n = n.Stop()
+			//end := token.(xml.EndElement)
 		case xml.CharData:
 			text := string(token.(xml.CharData))
-			printText(strings.TrimSpace(text))
+			if len(strings.TrimSpace(text)) > 0 {
+				n.AddText(text)
+			}
 		}
 	}
+
+	fmt.Println(n)
+	i := 0
+	n.print(i)
+}
+
+func tab(i int) {
+	for j := 0; j < i; j++ {
+		fmt.Printf("  ")
+	}
+}
+
+func (n *Node) print(l int) {
+	tab(l)
+	l++
+	fmt.Printf("%s text: %s\n", n.node_type.element.tag_name, n.node_type.text)
+	for i := 0; i < len(n.children); i++ {
+		n.children[i].print(l)
+	}
+}
+
+func Generate(in string, out string) {
+	fmt.Println(in, out)
+	xmlFile, err := ioutil.ReadFile(in)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+
+	xmlstring := strings.Replace(string(xmlFile), "\n", "", -1)
+	xmlstring = strings.Replace(string(xmlstring), "\r", "", -1)
+
+	pdf = gofpdf.New("P", "mm", "A4", "")
+	pdf.SetFont("Arial", "B", 16)
+	pdf.AddPage()
+
+	parse(xmlstring)
 
 	//Generate PDF Start
 	err = pdf.OutputFileAndClose(out)
