@@ -13,7 +13,7 @@ import (
 //global pointer to pdf
 var pdf *gofpdf.Fpdf
 
-func parse(source string) {
+func parse(source string) *Node {
 	r := bytes.NewReader([]byte(source))
 	d := xml.NewDecoder(r)
 	n := NewNode()
@@ -42,30 +42,10 @@ func parse(source string) {
 		}
 	}
 
-	fmt.Println(n)
-	i := 0
-	n.print(i)
-}
+	//draw tree
+	n.print(0)
 
-func tab(i int) {
-	for j := 0; j < i; j++ {
-		fmt.Printf("  ")
-	}
-}
-
-func (n *Node) print(l int) {
-	tab(l)
-	l++
-	fmt.Printf("%s text: %s\n", n.node_type.element.tag_name, n.node_type.text)
-	for i := 0; i < len(n.children); i++ {
-		switch str := n.children[i].(type) {
-		case *Node:
-			str.print(l + 1)
-		case string:
-			tab(l)
-			fmt.Printf("text: %s\n", str)
-		}
-	}
+	return n
 }
 
 func Generate(in string, out string) {
@@ -83,7 +63,9 @@ func Generate(in string, out string) {
 	pdf.SetFont("Arial", "B", 16)
 	pdf.AddPage()
 
-	parse(xmlstring)
+	//parse xml to node tree
+	//n *Node
+	n := parse(xmlstring)
 
 	//Generate PDF Start
 	err = pdf.OutputFileAndClose(out)

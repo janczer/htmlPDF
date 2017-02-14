@@ -1,5 +1,7 @@
 package htmlPDF
 
+import "fmt"
+
 type Node struct {
 	parent    *Node
 	children  map[int]interface{}
@@ -63,4 +65,25 @@ func (e ElementData) id() string {
 //change: return map with class or struct
 func (e ElementData) classes() string {
 	return e.attrs["class"]
+}
+
+func tab(i int) {
+	for j := 0; j < i; j++ {
+		fmt.Printf("  ")
+	}
+}
+
+func (n *Node) print(l int) {
+	tab(l)
+	l++
+	fmt.Printf("%s text: %s\n", n.node_type.element.tag_name, n.node_type.text)
+	for i := 0; i < len(n.children); i++ {
+		switch str := n.children[i].(type) {
+		case *Node:
+			str.print(l + 1)
+		case string:
+			tab(l)
+			fmt.Printf("text: %s\n", str)
+		}
+	}
 }
