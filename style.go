@@ -61,7 +61,7 @@ func (p *Parser) parseRules() Stylesheet {
 
 	rules := map[int]Rule{}
 
-	for i := 0; i < 3; i++ {
+	for {
 		p.consumeWhitespace()
 		if p.eof() {
 			break
@@ -80,6 +80,7 @@ func (p *Parser) parseRule() Rule {
 }
 
 func (p *Parser) parseDeclarations() map[int]Declaration {
+	p.consumeChar()
 	decl := map[int]Declaration{}
 	for {
 		p.consumeWhitespace()
@@ -107,7 +108,6 @@ func (p *Parser) parseDeclaration() Declaration {
 	return Declaration{name, value}
 }
 
-//add parse number
 func (p *Parser) parseValue() Value {
 	var valid = regexp.MustCompile("[0-9]")
 
@@ -238,25 +238,6 @@ func (p *Parser) consumeWhitespace() {
 // Return true if all input is consumed.
 func (p *Parser) eof() bool {
 	return p.pos >= len(p.input)
-}
-
-func main() {
-	fmt.Println("css engine")
-
-	//	css := "#test .first .third, #secid .second, #thirdid { margin: auto; color: #cc0000; }"
-	css2 := `
-	#test .class .class1, .class2 {
-		color: #cc00bb;
-		margin: auto;
-		padding-top: 100.14px;
-	}
-	#test2 .class {
-		color: #cc00bb;
-	}
-	`
-	fmt.Println(css2)
-	p := NewParser(css2)
-	p.parseRules()
 }
 
 func validIdentifierChar(c byte) bool {

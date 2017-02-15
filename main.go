@@ -59,19 +59,17 @@ func Generate(in string, out string) {
 	xmlstring := strings.Replace(string(xmlFile), "\n", "", -1)
 	xmlstring = strings.Replace(string(xmlstring), "\r", "", -1)
 
-	pdf = gofpdf.New("P", "mm", "A4", "")
-	pdf.SetFont("Arial", "B", 16)
-	pdf.AddPage()
-
 	//parse xml to node tree
-	//n *Node
 	n := parse(xmlstring)
 	fmt.Println(n)
 
-	//Generate PDF Start
-	err = pdf.OutputFileAndClose(out)
+	cssFile, err := ioutil.ReadFile("style.css")
 	if err != nil {
-		fmt.Println("Error with generate pdf", err)
+		fmt.Println("Error opening file:", err)
+		return
 	}
-	////Generate PDF End
+	cssStyle := string(cssFile)
+	fmt.Println(cssStyle)
+	p2 := NewParser(cssStyle)
+	p2.parseRules()
 }
