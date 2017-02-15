@@ -66,6 +66,7 @@ func Generate(in string, out string) {
 	//parse xml to node tree
 	//n *Node
 	n := parse(xmlstring)
+	fmt.Println(n)
 
 	//Generate PDF Start
 	err = pdf.OutputFileAndClose(out)

@@ -3,7 +3,7 @@ package htmlPDF
 type Dimensions struct {
 	content Rect
 
-	padding EngeSizes
+	padding EdgeSizes
 	border  EdgeSizes
 	margin  EdgeSizes
 }
