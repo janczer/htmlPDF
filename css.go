@@ -7,7 +7,7 @@ import (
 )
 
 type Stylesheet struct {
-	rules map[int]Rule
+	rules map[int]*Rule
 }
 
 type Rule struct {
@@ -21,6 +21,12 @@ type SimpleSelector struct {
 	class    map[int]string
 }
 
+type Specificity struct {
+	a int
+	b int
+	c int
+}
+
 //Calculate specificity
 //https://www.w3.org/TR/selectors/#specificity
 //cahnge algorithms
@@ -30,7 +36,7 @@ func (s SimpleSelector) specificity() Specificity {
 		a++
 	}
 	if len(s.class) > 0 {
-		b++
+		b = len(s.class)
 	}
 	if len(s.tag_name) > 0 {
 		c++
@@ -72,12 +78,6 @@ func validLengthChar(c string) bool {
 	return valid.MatchString(c)
 }
 
-type Specificity struct {
-	a int
-	b int
-	c int
-}
-
 //Parse a whole CSS stylesheet
 func NewParser(source string) *Parser {
 	return &Parser{
@@ -88,7 +88,7 @@ func NewParser(source string) *Parser {
 
 //Parse a list of rule sets, separated by optional whitespace
 func (p *Parser) parseRules() Stylesheet {
-	rules := map[int]Rule{}
+	rules := map[int]*Rule{}
 
 	for {
 		p.consumeWhitespace()
@@ -104,8 +104,8 @@ func (p *Parser) parseRules() Stylesheet {
 
 //Parse a rule: 'selectors { declarations }'
 //declarations it's pair of 'property: value;'
-func (p *Parser) parseRule() Rule {
-	return Rule{
+func (p *Parser) parseRule() *Rule {
+	return &Rule{
 		selectors:   p.parseSelectors(),
 		declaration: p.parseDeclarations(),
 	}

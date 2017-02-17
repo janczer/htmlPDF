@@ -30,5 +30,9 @@ func Generate(in string, out string) {
 	fmt.Println(cssStyle)
 	//todo change NewParser to ParseCSS with return *Rules
 	p2 := NewParser(cssStyle)
-	p2.parseRules()
+	stylesheet := p2.parseRules()
+
+	styletree := styleTree(n, &stylesheet)
+	fmt.Println("=============")
+	fmt.Println(styletree)
 }
