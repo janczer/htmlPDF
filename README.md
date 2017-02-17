@@ -1,5 +1,11 @@
 ## Todo:
 
+- [ ] HTML parser
+- [ ] CSS parser
+- [ ] Style tree
+- [ ] Layout tree
+- [ ] PDF
+
 Supports primary HTML tags:
 
 - [x] div
@@ -16,7 +22,7 @@ Supports primary HTML tags:
 - [x] h4
 - [x] h5
 - [ ] img
-- [x] br
+- [ ] br
 - [x] ul
 - [x] ol
 - [x] li
@@ -41,6 +47,6 @@ Support attributes:
 - [ ] border
 - [ ] background
 
-[ ] Support barcodes
+- [ ] Support barcodes
 
 

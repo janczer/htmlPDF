@@ -1,52 +1,13 @@
 package htmlPDF
 
 import (
-	"bytes"
-	"encoding/xml"
 	"fmt"
 	"github.com/jung-kurt/gofpdf"
-	"io"
 	"io/ioutil"
-	"strings"
 )
 
 //global pointer to pdf
 var pdf *gofpdf.Fpdf
-
-func parse(source string) *Node {
-	r := bytes.NewReader([]byte(source))
-	d := xml.NewDecoder(r)
-	n := NewNode()
-	for {
-		token, err := d.Token()
-		if err == io.EOF {
-			err = nil
-			break
-		}
-		if err != nil {
-			panic(err)
-		}
-		switch token.(type) {
-		case xml.StartElement:
-			start := token.(xml.StartElement)
-			fmt.Printf("start %s\n", start.Name.Local)
-			n = n.Start(start.Name.Local)
-		case xml.EndElement:
-			n = n.Stop()
-			//end := token.(xml.EndElement)
-		case xml.CharData:
-			text := string(token.(xml.CharData))
-			if len(strings.TrimSpace(text)) > 0 {
-				n.AddText(text)
-			}
-		}
-	}
-
-	//draw tree
-	n.print(0)
-
-	return n
-}
 
 func Generate(in string, out string) {
 	fmt.Println(in, out)
@@ -56,12 +17,9 @@ func Generate(in string, out string) {
 		return
 	}
 
-	xmlstring := strings.Replace(string(xmlFile), "\n", "", -1)
-	xmlstring = strings.Replace(string(xmlstring), "\r", "", -1)
-
-	//parse xml to node tree
-	n := parse(xmlstring)
-	fmt.Println(n)
+	//parse html to Node tree
+	n := ParseHtml(string(xmlFile))
+	n.print(0)
 
 	cssFile, err := ioutil.ReadFile("style.css")
 	if err != nil {
@@ -70,6 +28,7 @@ func Generate(in string, out string) {
 	}
 	cssStyle := string(cssFile)
 	fmt.Println(cssStyle)
+	//todo change NewParser to ParseCSS with return *Rules
 	p2 := NewParser(cssStyle)
 	p2.parseRules()
 }
