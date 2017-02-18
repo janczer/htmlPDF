@@ -35,4 +35,6 @@ func Generate(in string, out string) {
 	styletree := styleTree(n, &stylesheet)
 	fmt.Println("=============")
 	fmt.Println(styletree)
+	fmt.Println("=============")
+	fmt.Printf("%+v\n", buildLayoutTree(styletree))
 }

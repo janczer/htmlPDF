@@ -30,10 +30,50 @@ type LayoutBox struct {
 }
 
 type BlockNode struct {
+	style StyleNode
 }
 
 type InlineNode struct {
+	style StyleNode
 }
 
 type AnonymousBlock struct {
+	style StyleNode
+}
+
+func (s StyleNode) value(name string) Value {
+	val, ok := s.specified_values[name]
+	if ok {
+		return val
+	}
+	return Value{}
+}
+
+func (s StyleNode) display() string {
+	val, ok := s.specified_values["display"]
+	if ok {
+		return val.keyword
+	}
+	return "inline"
+}
+
+func NewLayoutBox(boxType interface{}) LayoutBox {
+	return LayoutBox{
+		box_type: boxType,
+	}
+}
+
+func buildLayoutTree(styleNode StyleNode) LayoutBox {
+	display := styleNode.display()
+	var boxType interface{}
+	switch display {
+	case "block":
+		boxType = BlockNode{styleNode}
+	case "inline":
+		boxType = InlineNode{styleNode}
+	default:
+		panic("Root node has display: none.")
+	}
+	root := NewLayoutBox(boxType)
+	return root
 }

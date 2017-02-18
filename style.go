@@ -1,7 +1,7 @@
 package htmlPDF
 
 import (
-//	"sort"
+	"sort"
 )
 
 type StyleNode struct {
@@ -74,7 +74,7 @@ func specifiedValues(elem *ElementData, stylesheet *Stylesheet) map[string]Value
 	rules := matchingRules(elem, stylesheet)
 
 	//add sort rules
-	//sort.Sort(SortBySpec(rules))
+	sort.Sort(SortBySpec(rules))
 
 	for _, matchedRule := range rules {
 		for _, declaration := range matchedRule.rule.declaration {

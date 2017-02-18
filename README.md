@@ -1,8 +1,8 @@
 ## Todo:
 
-- [ ] HTML parser
-- [ ] CSS parser
-- [ ] Style tree
+- [x] HTML parser
+- [x] CSS parser
+- [x] Style tree
 - [ ] Layout tree
 - [ ] PDF
 
