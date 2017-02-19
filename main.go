@@ -36,5 +36,34 @@ func Generate(in string, out string) {
 	fmt.Println("=============")
 	fmt.Println(styletree)
 	fmt.Println("=============")
-	fmt.Printf("%+v\n", buildLayoutTree(styletree))
+	viewport := Dimensions{}
+	viewport.content.width = 800
+	viewport.content.height = 600
+
+	layoutTree := layoutTree(styletree, viewport)
+	fmt.Printf("%+v\n", layoutTree)
+
+	list := map[int]DisplayCommand{}
+
+	rect := Rect{10, 10, 50, 50}
+	color := Color{255, 0, 0, 0}
+	list[0] = DisplayCommand{SolidColor{color: color, rect: rect}}
+
+	rect.x += 10
+	rect.y += 10
+	color.r = 0
+	color.g = 255
+	list[1] = DisplayCommand{SolidColor{color: color, rect: rect}}
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "", 16)
+	for i := 0; i < len(list); i++ {
+		list[i].draw(pdf)
+	}
+	err = pdf.OutputFileAndClose("hello.pdf")
+	if err != nil {
+		fmt.Println("Error pdf", err)
+	}
+	pdf.Close()
 }

@@ -119,6 +119,15 @@ func (l LayoutBox) getInlineContainer() LayoutBox {
 	}
 }
 
+func layoutTree(node StyleNode, containBlock Dimensions) LayoutBox {
+	containBlock.content.height = 0
+
+	rootBox := buildLayoutTree(node)
+	rootBox.layout(containBlock)
+
+	return rootBox
+}
+
 func (l LayoutBox) layout(containBlock Dimensions) {
 	switch l.box_type.(type) {
 	case BlockNode:
