@@ -36,6 +36,7 @@ func Generate(in string, out string) {
 	fmt.Println("=============")
 	fmt.Println(styletree)
 	fmt.Println("=============")
+
 	viewport := Dimensions{}
 	viewport.content.width = 800
 	viewport.content.height = 600
