@@ -43,12 +43,14 @@ func Generate(in string, out string) {
 
 	layoutTree := layoutTree(styletree, viewport)
 	fmt.Printf("%+v\n", layoutTree)
-
-	list := map[int]DisplayCommand{}
+	list := buildDisplayList(layoutTree)
+	fmt.Println("==========DisplayCommand============")
+	fmt.Println(list)
+	//list := map[int]DisplayCommand{}
 
 	rect := Rect{10, 10, 50, 50}
 	color := Color{255, 0, 0, 0}
-	list[0] = DisplayCommand{SolidColor{color: color, rect: rect}}
+	//list[0] = DisplayCommand{SolidColor{color: color, rect: rect}}
 
 	rect.x += 10
 	rect.y += 10
@@ -56,6 +58,8 @@ func Generate(in string, out string) {
 	color.g = 255
 	list[1] = DisplayCommand{SolidColor{color: color, rect: rect}}
 
+	fmt.Println("list")
+	fmt.Println(list)
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "", 16)

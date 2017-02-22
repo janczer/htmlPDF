@@ -43,13 +43,31 @@ func (l LayoutBox) getStyleNode() StyleNode {
 	}
 }
 
-type BlockNode struct {
+type BlockNode struct{}
+
+type InlineNode struct{}
+
+type AnonymousBlock struct{}
+
+func (r Rect) expandedBy(edge EdgeSizes) Rect {
+	return Rect{
+		x:      r.x - edge.left,
+		y:      r.y - edge.top,
+		width:  r.width + edge.left + edge.right,
+		height: r.height + edge.top + edge.bottom,
+	}
 }
 
-type InlineNode struct {
+func (d Dimensions) paddingBox() Rect {
+	return d.content.expandedBy(d.padding)
 }
 
-type AnonymousBlock struct {
+func (d Dimensions) borderBox() Rect {
+	return d.paddingBox().expandedBy(d.border)
+}
+
+func (d Dimensions) marginBox() Rect {
+	return d.borderBox().expandedBy(d.margin)
 }
 
 func (s StyleNode) value(name string) Value {
@@ -57,7 +75,8 @@ func (s StyleNode) value(name string) Value {
 	if ok {
 		return val
 	}
-	return Value{}
+	//Return white color and transparent color
+	return Value{color: Color{255, 255, 255, 0}}
 }
 
 func (s StyleNode) lookup(first string, second string, end Length) Length {
