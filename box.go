@@ -189,7 +189,13 @@ func (l *LayoutBox) layoutBox(containBlock Dimensions) {
 }
 
 func (l *LayoutBox) layoutBlockChildren() {
-	//TODO
+	d := l.dimensions
+
+	for _, child := range l.children {
+		child.layout(d)
+		// Track the height so each child is laid out below the previous content.
+		d.content.height = d.content.height + child.dimensions.marginBox().height
+	}
 }
 
 //Calculate the width of a block-level non-replaced element in normal flow

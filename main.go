@@ -33,33 +33,14 @@ func Generate(in string, out string) {
 	stylesheet := p2.parseRules()
 
 	styletree := styleTree(n, &stylesheet)
-	fmt.Println("=============")
-	fmt.Println(styletree)
-	fmt.Println("=============")
 
 	viewport := Dimensions{}
 	viewport.content.width = 800
 	viewport.content.height = 600
 
 	layoutTree := layoutTree(styletree, viewport)
-	fmt.Printf("%+v\n", layoutTree)
 	list := buildDisplayList(layoutTree)
-	fmt.Println("==========DisplayCommand============")
-	fmt.Println(list)
-	//list := map[int]DisplayCommand{}
 
-	rect := Rect{10, 10, 50, 50}
-	color := Color{255, 0, 0, 0}
-	//list[0] = DisplayCommand{SolidColor{color: color, rect: rect}}
-
-	rect.x += 10
-	rect.y += 10
-	color.r = 0
-	color.g = 255
-	list[1] = DisplayCommand{SolidColor{color: color, rect: rect}}
-
-	fmt.Println("list")
-	fmt.Println(list)
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "", 16)
