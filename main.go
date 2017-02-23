@@ -35,11 +35,13 @@ func Generate(in string, out string) {
 	styletree := styleTree(n, &stylesheet)
 
 	viewport := Dimensions{}
-	viewport.content.width = 800
+	viewport.content.width = 210
 	viewport.content.height = 600
 
 	layoutTree := layoutTree(styletree, viewport)
+	fmt.Printf("%+v\n", layoutTree)
 	list := buildDisplayList(layoutTree)
+	fmt.Printf("%+v\n", list)
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()

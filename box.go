@@ -143,8 +143,6 @@ func (l *LayoutBox) getInlineContainer() *LayoutBox {
 		return l
 	case BlockNode:
 		return NewLayoutBox(BlockNode{}, StyleNode{})
-		//switch childBoxType := value.(l.children[len(l.children)-1].box_type) {
-		//}
 	default:
 		return l
 	}
@@ -154,12 +152,12 @@ func layoutTree(node StyleNode, containBlock Dimensions) *LayoutBox {
 	containBlock.content.height = 0
 
 	rootBox := buildLayoutTree(node)
-	rootBox.layout(containBlock)
+	rootBox.layout(&containBlock)
 
 	return rootBox
 }
 
-func (l *LayoutBox) layout(containBlock Dimensions) {
+func (l *LayoutBox) layout(containBlock *Dimensions) {
 	switch typ := l.box_type.(type) {
 	case BlockNode:
 		l.layoutBox(containBlock)
@@ -172,7 +170,7 @@ func (l *LayoutBox) layout(containBlock Dimensions) {
 	}
 }
 
-func (l *LayoutBox) layoutBox(containBlock Dimensions) {
+func (l *LayoutBox) layoutBox(containBlock *Dimensions) {
 	//Child width can depend on parent width, so we need to calculate
 	//this box's width before laying out its children.
 	l.calculateBlockWidth(containBlock)
@@ -189,7 +187,7 @@ func (l *LayoutBox) layoutBox(containBlock Dimensions) {
 }
 
 func (l *LayoutBox) layoutBlockChildren() {
-	d := l.dimensions
+	d := &l.dimensions
 
 	for _, child := range l.children {
 		child.layout(d)
@@ -201,17 +199,23 @@ func (l *LayoutBox) layoutBlockChildren() {
 //Calculate the width of a block-level non-replaced element in normal flow
 //http://www.w3.org/TR/CSS2/visudet.html#blockwidth
 //Sets the horizontal margin/padding/border dimesions, and the 'width'
-func (l *LayoutBox) calculateBlockWidth(containBlock Dimensions) {
+func (l *LayoutBox) calculateBlockWidth(containBlock *Dimensions) {
 	style := l.getStyleNode()
 
 	//width has initial value auto
-	width := style.value("width")
+	width, ok := style.specified_values["width"]
+	if !ok {
+		width = Value{
+			keyword: "auto",
+		}
+	}
 
 	//margin, border, and padding have initial value 0
 	zero := Length{0.0, "px"}
 
 	marginLeft := style.lookup("margin-left", "margin", zero)
 	marginRight := style.lookup("margin-right", "margin", zero)
+	fmt.Println("margin-right", marginRight)
 
 	borderLeft := style.lookup("border-left-width", "border-width", zero)
 	borderRight := style.lookup("border-rigth-width", "border-width", zero)
@@ -221,17 +225,28 @@ func (l *LayoutBox) calculateBlockWidth(containBlock Dimensions) {
 
 	total := GetTotalFrom(marginLeft, marginRight, borderLeft, borderRight, paddingLeft, paddingRight)
 
+	//if width.keyword != "auto" && total > containBlock.content.width {
+	//	if marginLeft.keyword == "auto" {
+	//		marginLeft = Length{0, "Px"}
+	//	}
+	//	if marginRight == "auto" {
+	//		marginRight = Length{0, "Px"}
+	//	}
+	//}
+
 	underflow := containBlock.content.width - total
 
 	widthAuto := width.keyword == "auto"
 	marginLeftAuto := style.value("margin-left").keyword == "auto"
 	marginRightAuto := style.value("margin-right").keyword == "auto"
 	widthLength := width.length
+	fmt.Println("margin-right", marginRight)
 
 	//If the values are overconstrained, calculate margin_rigth
 	if !widthAuto && !marginLeftAuto && !marginRightAuto {
 		marginRight = Length{value: marginRight.value + underflow}
 	}
+	fmt.Println("margin-right", marginRight)
 
 	//If execly one size is auto, its used value fallows from the equality
 	if !widthAuto && !marginLeftAuto && marginRightAuto {
@@ -241,6 +256,7 @@ func (l *LayoutBox) calculateBlockWidth(containBlock Dimensions) {
 	if !widthAuto && marginLeftAuto && !marginRightAuto {
 		marginLeft = Length{value: underflow}
 	}
+	fmt.Println("margin-right", marginRight)
 
 	if widthAuto {
 		if marginLeftAuto {
@@ -274,12 +290,13 @@ func (l *LayoutBox) calculateBlockWidth(containBlock Dimensions) {
 
 	l.dimensions.margin.left = marginLeft.value
 	l.dimensions.margin.right = marginRight.value
+	fmt.Println("margin-right", marginRight)
 }
 
 //Finish calculating the block's edge sizes, and position it within its containing block
 // http://www.w3.org/TR/CSS2/visudet.html#normal-block
 //Sets the vertical margin/padding/border dimensions, and the 'x', 'y' values
-func (l *LayoutBox) calculateBlockPosition(containBlock Dimensions) {
+func (l *LayoutBox) calculateBlockPosition(containBlock *Dimensions) {
 	style := l.getStyleNode()
 
 	zero := Length{0.0, "Px"}
@@ -300,9 +317,9 @@ func (l *LayoutBox) calculateBlockPosition(containBlock Dimensions) {
 }
 
 //Height of a block-level non-replaced element in normal flow with overflow visible
-func (l *LayoutBox) calculateBlockHeight(containBlock Dimensions) {
+func (l *LayoutBox) calculateBlockHeight(containBlock *Dimensions) {
 	//If the height is set to an explicit length, use that exact lenght
-	//Otherwise, jsut keep the value set by 'layoutBlockChildre'
+	//Otherwise, just keep the value set by 'layoutBlockChildren'
 	height := l.getStyleNode().value("height")
 	if height.length.value != 0 {
 		l.dimensions.content.height = height.length.value

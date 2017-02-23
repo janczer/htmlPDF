@@ -65,6 +65,11 @@ func renderBorders(layoutBox *LayoutBox, list map[int]DisplayCommand) {
 	if colorBorder == nil {
 		return
 	}
+	//Return if white
+	//TODO change crete Color with nil
+	if colorBorder.r == 255 && colorBorder.g == 255 && colorBorder.b == 255 {
+		return
+	}
 
 	d := layoutBox.dimensions
 
