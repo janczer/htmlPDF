@@ -13,6 +13,12 @@ type SolidColor struct {
 	rect  Rect
 }
 
+type Text struct {
+	color Color
+	text  string
+	rect  Rect
+}
+
 func (d DisplayCommand) draw(pdf *gofpdf.Fpdf) {
 	switch command := d.command.(type) {
 	case SolidColor:
@@ -20,6 +26,12 @@ func (d DisplayCommand) draw(pdf *gofpdf.Fpdf) {
 		c := command.color
 		pdf.SetFillColor(int(c.r), int(c.g), int(c.b))
 		pdf.Rect(r.x, r.y, r.width, r.height, "F")
+	case Text:
+		r := command.rect
+		c := command.color
+		t := command.text
+		pdf.SetTextColor(int(c.r), int(c.g), int(c.b))
+		pdf.Text(r.x, r.y, t)
 	}
 }
 
@@ -31,15 +43,13 @@ func buildDisplayList(layoutRoot *LayoutBox) map[int]DisplayCommand {
 
 func renderLayoutBox(layoutBox *LayoutBox, list map[int]DisplayCommand) {
 	//renderBackground
-	backgroundCommand := renderBackground(layoutBox)
-	if backgroundCommand != nil {
-		list[len(list)] = *backgroundCommand
-	}
+	renderBackground(layoutBox, list)
 
 	//renderBorders
 	renderBorders(layoutBox, list)
 
-	//TODO renderText
+	//renderText
+	renderText(layoutBox, list)
 
 	//Render child
 	for _, child := range layoutBox.children {
@@ -47,12 +57,31 @@ func renderLayoutBox(layoutBox *LayoutBox, list map[int]DisplayCommand) {
 	}
 }
 
-func renderBackground(layoutBox *LayoutBox) *DisplayCommand {
+func renderText(layoutBox *LayoutBox, list map[int]DisplayCommand) {
+	colorText := getColor(layoutBox, "color")
+	if colorText == nil {
+		return
+	}
+	text := layoutBox.style.node.node_type.text
+	if len(text) == 0 {
+		return
+	}
+
+	list[len(list)] = DisplayCommand{
+		command: Text{
+			color: *colorText,
+			text:  text,
+			rect:  layoutBox.dimensions.textBox(),
+		},
+	}
+}
+
+func renderBackground(layoutBox *LayoutBox, list map[int]DisplayCommand) {
 	colorBackrgound := getColor(layoutBox, "background")
 	if colorBackrgound == nil {
-		return nil
+		return
 	}
-	return &DisplayCommand{
+	list[len(list)] = DisplayCommand{
 		command: SolidColor{
 			color: *colorBackrgound,
 			rect:  layoutBox.dimensions.borderBox(),
@@ -66,7 +95,7 @@ func renderBorders(layoutBox *LayoutBox, list map[int]DisplayCommand) {
 		return
 	}
 	//Return if white
-	//TODO change crete Color with nil
+	//TODO change create Color with nil
 	if colorBorder.r == 255 && colorBorder.g == 255 && colorBorder.b == 255 {
 		return
 	}

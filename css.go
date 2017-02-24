@@ -1,7 +1,6 @@
 package htmlPDF
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 )
@@ -79,7 +78,7 @@ func validLengthChar(c string) bool {
 }
 
 //Parse a whole CSS stylesheet
-func NewParser(source string) *Parser {
+func CssParser(source string) *Parser {
 	return &Parser{
 		pos:   0,
 		input: source,
@@ -97,7 +96,6 @@ func (p *Parser) parseRules() Stylesheet {
 		}
 		rules[len(rules)] = p.parseRule()
 	}
-	fmt.Printf("%+v\n", rules)
 
 	return Stylesheet{rules}
 }
@@ -169,7 +167,6 @@ func (p *Parser) parseFloat() Length {
 	}
 	r, e := strconv.ParseFloat(result, 64)
 	if e != nil {
-		fmt.Println(e)
 		return Length{0, "px"}
 	}
 	return Length{r, "px"}
@@ -193,7 +190,6 @@ func (p *Parser) parseHexPair() uint {
 	p.pos += 2
 	r, e := strconv.ParseUint(s, 16, 64)
 	if e != nil {
-		fmt.Println(e)
 		return 0
 	}
 	return uint(r)
@@ -213,7 +209,6 @@ Loopsels:
 		case "{":
 			break Loopsels
 		default:
-			fmt.Printf("char %v\n", string(p.nextChar()))
 			panic("Unexpected character")
 		}
 	}

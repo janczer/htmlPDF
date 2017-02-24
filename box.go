@@ -1,7 +1,5 @@
 package htmlPDF
 
-import "fmt"
-
 type Dimensions struct {
 	content Rect
 
@@ -70,23 +68,30 @@ func (d Dimensions) marginBox() Rect {
 	return d.borderBox().expandedBy(d.margin)
 }
 
+func (d Dimensions) textBox() Rect {
+	return Rect{
+		x: d.content.x + d.margin.left + d.padding.left + d.border.left,
+		y: d.content.y + d.margin.top + d.padding.top + d.border.top,
+	}
+}
+
 func (s StyleNode) value(name string) Value {
 	val, ok := s.specified_values[name]
 	if ok {
 		return val
 	}
 	//Return white color and transparent color
-	return Value{color: Color{255, 255, 255, 0}}
+	return Value{color: Color{0, 0, 0, 0}}
 }
 
-func (s StyleNode) lookup(first string, second string, end Length) Length {
+func (s StyleNode) lookup(first string, second string, end Value) Value {
 	f, ok := s.specified_values[first]
 	if ok {
-		return f.length
+		return f
 	}
 	f, ok = s.specified_values[second]
 	if ok {
-		return f.length
+		return f
 	}
 	return end
 }
@@ -128,7 +133,9 @@ func buildLayoutTree(styleNode StyleNode) *LayoutBox {
 			root.children[len(root.children)] = buildLayoutTree(child)
 		case "inline":
 			inline := root.getInlineContainer()
+			inline.style = child
 			inline.children[len(inline.children)] = buildLayoutTree(child)
+			root.children[len(root.children)] = inline
 		default:
 		}
 	}
@@ -139,10 +146,10 @@ func buildLayoutTree(styleNode StyleNode) *LayoutBox {
 func (l *LayoutBox) getInlineContainer() *LayoutBox {
 	boxT := l.box_type
 	switch boxT.(type) {
-	case AnonymousBlock:
+	case AnonymousBlock, InlineNode:
 		return l
 	case BlockNode:
-		return NewLayoutBox(BlockNode{}, StyleNode{})
+		return NewLayoutBox(AnonymousBlock{}, StyleNode{})
 	default:
 		return l
 	}
@@ -158,16 +165,19 @@ func layoutTree(node StyleNode, containBlock Dimensions) *LayoutBox {
 }
 
 func (l *LayoutBox) layout(containBlock *Dimensions) {
-	switch typ := l.box_type.(type) {
+	switch l.box_type.(type) {
 	case BlockNode:
 		l.layoutBox(containBlock)
 	case InlineNode:
-		//TODO
+		l.inlineBox(containBlock)
 	case AnonymousBlock:
 		//TODO
 	default:
-		fmt.Println(typ)
 	}
+}
+
+func (l *LayoutBox) inlineBox(containBlock *Dimensions) {
+	l.dimensions.margin.top = 10
 }
 
 func (l *LayoutBox) layoutBox(containBlock *Dimensions) {
@@ -211,11 +221,12 @@ func (l *LayoutBox) calculateBlockWidth(containBlock *Dimensions) {
 	}
 
 	//margin, border, and padding have initial value 0
-	zero := Length{0.0, "px"}
+	zero := Value{
+		length: Length{0.0, "px"},
+	}
 
 	marginLeft := style.lookup("margin-left", "margin", zero)
 	marginRight := style.lookup("margin-right", "margin", zero)
-	fmt.Println("margin-right", marginRight)
 
 	borderLeft := style.lookup("border-left-width", "border-width", zero)
 	borderRight := style.lookup("border-rigth-width", "border-width", zero)
@@ -225,72 +236,68 @@ func (l *LayoutBox) calculateBlockWidth(containBlock *Dimensions) {
 
 	total := GetTotalFrom(marginLeft, marginRight, borderLeft, borderRight, paddingLeft, paddingRight)
 
-	//if width.keyword != "auto" && total > containBlock.content.width {
-	//	if marginLeft.keyword == "auto" {
-	//		marginLeft = Length{0, "Px"}
-	//	}
-	//	if marginRight == "auto" {
-	//		marginRight = Length{0, "Px"}
-	//	}
-	//}
+	if width.keyword != "auto" && total > containBlock.content.width {
+		if marginLeft.keyword == "auto" {
+			marginLeft = Value{length: Length{0, "Px"}}
+		}
+		if marginRight.keyword == "auto" {
+			marginRight = Value{length: Length{0, "Px"}}
+		}
+	}
 
 	underflow := containBlock.content.width - total
 
 	widthAuto := width.keyword == "auto"
 	marginLeftAuto := style.value("margin-left").keyword == "auto"
 	marginRightAuto := style.value("margin-right").keyword == "auto"
-	widthLength := width.length
-	fmt.Println("margin-right", marginRight)
+	widthLength := width
 
 	//If the values are overconstrained, calculate margin_rigth
 	if !widthAuto && !marginLeftAuto && !marginRightAuto {
-		marginRight = Length{value: marginRight.value + underflow}
+		marginRight = Value{length: Length{marginRight.length.value + underflow, "Px"}}
 	}
-	fmt.Println("margin-right", marginRight)
 
 	//If execly one size is auto, its used value fallows from the equality
 	if !widthAuto && !marginLeftAuto && marginRightAuto {
-		marginRight = Length{value: underflow}
+		marginRight.length = Length{value: underflow}
 	}
 
 	if !widthAuto && marginLeftAuto && !marginRightAuto {
-		marginLeft = Length{value: underflow}
+		marginLeft.length = Length{value: underflow}
 	}
-	fmt.Println("margin-right", marginRight)
 
 	if widthAuto {
 		if marginLeftAuto {
-			marginLeft = Length{}
+			marginLeft = Value{}
 		}
 		if marginRightAuto {
-			marginRight = Length{}
+			marginRight = Value{}
 		}
 
 		if underflow >= 0 {
 			//Expand width to fill the underflow
-			widthLength = Length{value: underflow}
+			widthLength = Value{length: Length{value: underflow}}
 		} else {
 			//Width can't be negative.Adjust the right margin instead
-			widthLength = Length{}
-			marginRight = Length{value: marginRight.value + underflow}
+			widthLength = Value{}
+			marginRight = Value{length: Length{marginRight.length.value + underflow, "Px"}}
 		}
 	}
 	//If margin-left and margin-right are both auto, their used values are equal
 	if !widthAuto && marginLeftAuto && marginRightAuto {
-		marginLeft = Length{value: underflow / 2}
-		marginRight = Length{value: underflow / 2}
+		marginLeft.length = Length{value: underflow / 2}
+		marginRight.length = Length{value: underflow / 2}
 	}
-	l.dimensions.content.width = widthLength.value
+	l.dimensions.content.width = widthLength.length.value
 
-	l.dimensions.padding.left = paddingLeft.value
-	l.dimensions.padding.right = paddingRight.value
+	l.dimensions.padding.left = paddingLeft.length.value
+	l.dimensions.padding.right = paddingRight.length.value
 
-	l.dimensions.border.left = borderLeft.value
-	l.dimensions.border.right = borderRight.value
+	l.dimensions.border.left = borderLeft.length.value
+	l.dimensions.border.right = borderRight.length.value
 
-	l.dimensions.margin.left = marginLeft.value
-	l.dimensions.margin.right = marginRight.value
-	fmt.Println("margin-right", marginRight)
+	l.dimensions.margin.left = marginLeft.length.value
+	l.dimensions.margin.right = marginRight.length.value
 }
 
 //Finish calculating the block's edge sizes, and position it within its containing block
@@ -299,16 +306,18 @@ func (l *LayoutBox) calculateBlockWidth(containBlock *Dimensions) {
 func (l *LayoutBox) calculateBlockPosition(containBlock *Dimensions) {
 	style := l.getStyleNode()
 
-	zero := Length{0.0, "Px"}
+	zero := Value{
+		length: Length{0.0, "px"},
+	}
 
-	l.dimensions.margin.top = style.lookup("margin-top", "margin", zero).value
-	l.dimensions.margin.bottom = style.lookup("margin-bottom", "margin", zero).value
+	l.dimensions.margin.top = style.lookup("margin-top", "margin", zero).length.value
+	l.dimensions.margin.bottom = style.lookup("margin-bottom", "margin", zero).length.value
 
-	l.dimensions.border.top = style.lookup("border-top-width", "border-width", zero).value
-	l.dimensions.border.bottom = style.lookup("border-bottom-width", "border-width", zero).value
+	l.dimensions.border.top = style.lookup("border-top-width", "border-width", zero).length.value
+	l.dimensions.border.bottom = style.lookup("border-bottom-width", "border-width", zero).length.value
 
-	l.dimensions.padding.top = style.lookup("padding-top", "padding", zero).value
-	l.dimensions.padding.bottom = style.lookup("padding-bottom", "padding", zero).value
+	l.dimensions.padding.top = style.lookup("padding-top", "padding", zero).length.value
+	l.dimensions.padding.bottom = style.lookup("padding-bottom", "padding", zero).length.value
 
 	l.dimensions.content.x = containBlock.content.x + l.dimensions.margin.left + l.dimensions.border.left + l.dimensions.padding.left
 
@@ -326,6 +335,6 @@ func (l *LayoutBox) calculateBlockHeight(containBlock *Dimensions) {
 	}
 }
 
-func GetTotalFrom(ml, mr, bl, br, pl, pr Length) float64 {
-	return ml.value + mr.value + bl.value + br.value + pl.value + pr.value
+func GetTotalFrom(ml, mr, bl, br, pl, pr Value) float64 {
+	return ml.length.value + mr.length.value + bl.length.value + br.length.value + pl.length.value + pr.length.value
 }

@@ -9,11 +9,9 @@ import (
 //global pointer to pdf
 var pdf *gofpdf.Fpdf
 
-func Generate(in string, out string) {
-	fmt.Println(in, out)
-	xmlFile, err := ioutil.ReadFile(in)
+func Generate(html string, css string, out string) {
+	xmlFile, err := ioutil.ReadFile(html)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
 		return
 	}
 
@@ -21,15 +19,12 @@ func Generate(in string, out string) {
 	n := ParseHtml(string(xmlFile))
 	n.print(0)
 
-	cssFile, err := ioutil.ReadFile("style.css")
+	cssFile, err := ioutil.ReadFile(css)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
 		return
 	}
 	cssStyle := string(cssFile)
-	fmt.Println(cssStyle)
-	//todo change NewParser to ParseCSS with return *Rules
-	p2 := NewParser(cssStyle)
+	p2 := CssParser(cssStyle)
 	stylesheet := p2.parseRules()
 
 	styletree := styleTree(n, &stylesheet)
@@ -39,9 +34,7 @@ func Generate(in string, out string) {
 	viewport.content.height = 600
 
 	layoutTree := layoutTree(styletree, viewport)
-	fmt.Printf("%+v\n", layoutTree)
 	list := buildDisplayList(layoutTree)
-	fmt.Printf("%+v\n", list)
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
