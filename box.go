@@ -1,5 +1,7 @@
 package htmlPDF
 
+import "fmt"
+
 type Dimensions struct {
 	content Rect
 
@@ -132,6 +134,7 @@ func buildLayoutTree(styleNode StyleNode) *LayoutBox {
 		case "block":
 			root.children[len(root.children)] = buildLayoutTree(child)
 		case "inline":
+			fmt.Println("some inline")
 			inline := root.getInlineContainer()
 			inline.style = child
 			inline.children[len(inline.children)] = buildLayoutTree(child)
@@ -147,8 +150,10 @@ func (l *LayoutBox) getInlineContainer() *LayoutBox {
 	boxT := l.box_type
 	switch boxT.(type) {
 	case AnonymousBlock, InlineNode:
+		fmt.Println("anonymous")
 		return l
 	case BlockNode:
+		fmt.Println("blocknode")
 		return NewLayoutBox(AnonymousBlock{}, StyleNode{})
 	default:
 		return l
@@ -169,15 +174,33 @@ func (l *LayoutBox) layout(containBlock *Dimensions) {
 	case BlockNode:
 		l.layoutBox(containBlock)
 	case InlineNode:
+		fmt.Println("layout inlinenode")
 		l.inlineBox(containBlock)
 	case AnonymousBlock:
-		//TODO
+		fmt.Println("layout anonymous")
+		l.anonymousBox(containBlock)
 	default:
 	}
 }
 
 func (l *LayoutBox) inlineBox(containBlock *Dimensions) {
-	l.dimensions.margin.top = 10
+	fmt.Printf("%+v", containBlock.content)
+
+	l.dimensions.content.x = containBlock.content.x
+	l.dimensions.content.y = containBlock.content.y
+	//l.dimensions.content.y = containBlock.content.height
+}
+
+func (l *LayoutBox) anonymousBox(containBlock *Dimensions) {
+	fmt.Printf("%+v", containBlock.content)
+	//block position is the same previous
+	l.dimensions.content.x = containBlock.content.x
+	l.dimensions.content.y = containBlock.content.y
+	l.dimensions.content.height = containBlock.content.height
+	l.dimensions.content.width = containBlock.content.width
+
+	//Recursibely layout the children of this box
+	l.layoutBlockChildren()
 }
 
 func (l *LayoutBox) layoutBox(containBlock *Dimensions) {

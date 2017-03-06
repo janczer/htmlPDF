@@ -1,6 +1,7 @@
 package htmlPDF
 
 import (
+	"fmt"
 	"github.com/jung-kurt/gofpdf"
 )
 
@@ -66,6 +67,7 @@ func renderText(layoutBox *LayoutBox, list map[int]DisplayCommand) {
 	if len(text) == 0 {
 		return
 	}
+	fmt.Println(text)
 
 	list[len(list)] = DisplayCommand{
 		command: Text{

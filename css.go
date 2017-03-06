@@ -221,22 +221,30 @@ func (p *Parser) parseSelector() SimpleSelector {
 	m := SimpleSelector{class: map[int]string{}}
 Loopsel:
 	for !p.eof() {
-		switch p.nextChar() {
-		case "#":
+		c := p.nextChar()
+		switch {
+		case c == "#":
 			p.consumeChar()
 			m.id = p.parseIdentifier()
-		case ".":
+		case c == ".":
 			p.consumeChar()
 			m.class[len(m.class)] = p.parseIdentifier()
-		case "*":
+		case c == "*":
 			// universal selector
 			p.consumeChar()
+		case validIdentifierChar(c):
+			m.tag_name = p.parseIdentifier()
 		default:
 			break Loopsel
 		}
 		p.consumeWhitespace()
 	}
 	return m
+}
+
+func validIdentifierChar(c string) bool {
+	var valid = regexp.MustCompile("[a-zA-Z0-9-_]")
+	return valid.MatchString(c)
 }
 
 //Parse a property name or keyword
