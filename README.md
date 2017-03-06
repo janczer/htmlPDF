@@ -1,4 +1,4 @@
-## Package for create pdf form html
+## Package for create pdf from html
 
    Implement series article [Let's build a toy browser engine!](https://limpet.net/mbrubeck/2014/08/08/toy-layout-engine-1.html)
 
