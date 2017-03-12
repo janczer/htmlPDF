@@ -115,8 +115,25 @@ func NewLayoutBox(boxType interface{}, style StyleNode) *LayoutBox {
 	}
 }
 
+func (s LayoutBox) print(l int) {
+	tab(l)
+	fmt.Printf("dimensions %v\n", s.dimensions)
+	tab(l)
+	fmt.Printf("box type %#v\n", s.box_type)
+	tab(l)
+	fmt.Printf("style %v\n", s.style)
+	tab(l)
+	fmt.Printf("childrens: \n")
+	l++
+	for i := 0; i < len(s.children); i++ {
+		s.children[i].print(l + 1)
+	}
+}
+
 func buildLayoutTree(styleNode StyleNode) *LayoutBox {
+
 	display := styleNode.display()
+	fmt.Println(display)
 	var boxType interface{}
 	switch display {
 	case "block":
@@ -126,34 +143,64 @@ func buildLayoutTree(styleNode StyleNode) *LayoutBox {
 	default:
 		panic("Root node has display: none.")
 	}
-	root := NewLayoutBox(boxType, styleNode)
+	fmt.Println(boxType)
+
+	l := LayoutBox{
+		box_type: boxType,
+		children: map[int]*LayoutBox{},
+		style:    styleNode,
+	}
 
 	for _, child := range styleNode.children {
 		display = child.display()
 		switch display {
 		case "block":
-			root.children[len(root.children)] = buildLayoutTree(child)
+			childLayoutTree := buildLayoutTree(child)
+			l.children[len(l.children)] = childLayoutTree
 		case "inline":
-			fmt.Println("some inline")
-			inline := root.getInlineContainer()
-			inline.style = child
-			inline.children[len(inline.children)] = buildLayoutTree(child)
-			root.children[len(root.children)] = inline
-		default:
+			boxT := l.getLastContainer().box_type
+			//add anonymous box
+			switch boxT.(type) {
+			case AnonymousBlock, InlineNode:
+				childLayoutTree := buildLayoutTree(child)
+				l.children[len(l.children)] = childLayoutTree
+			case BlockNode:
+				//create AnonymousBlock
+				anonymous := LayoutBox{
+					box_type: AnonymousBlock{},
+					children: map[int]*LayoutBox{},
+				}
+				//buildLayoutTree
+				childLayoutTree := buildLayoutTree(child)
+				//add to AnonymousBlock
+				anonymous.children[len(anonymous.children)] = childLayoutTree
+				//add anonymousBox to child
+				l.children[len(l.children)] = &anonymous
+			}
 		}
 	}
 
-	return root
+	return &l
+}
+
+func (l *LayoutBox) getLastContainer() *LayoutBox {
+	if len(l.children) == 0 {
+		return l
+	}
+
+	if len(l.children) == 1 {
+		return l.children[0]
+	}
+
+	return l.children[len(l.children)-1]
 }
 
 func (l *LayoutBox) getInlineContainer() *LayoutBox {
 	boxT := l.box_type
 	switch boxT.(type) {
 	case AnonymousBlock, InlineNode:
-		fmt.Println("anonymous")
 		return l
 	case BlockNode:
-		fmt.Println("blocknode")
 		return NewLayoutBox(AnonymousBlock{}, StyleNode{})
 	default:
 		return l
@@ -189,6 +236,11 @@ func (l *LayoutBox) inlineBox(containBlock *Dimensions) {
 	l.dimensions.content.x = containBlock.content.x
 	l.dimensions.content.y = containBlock.content.y
 	//l.dimensions.content.y = containBlock.content.height
+	d := &l.dimensions
+
+	for _, child := range l.children {
+		child.layout(d)
+	}
 }
 
 func (l *LayoutBox) anonymousBox(containBlock *Dimensions) {

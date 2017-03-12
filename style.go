@@ -1,6 +1,7 @@
 package htmlPDF
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -100,6 +101,19 @@ func styleTree(root *Node, stylesheet *Stylesheet) StyleNode {
 		node:             root,
 		specified_values: specifiedValue,
 		children:         children,
+	}
+}
+
+func (s StyleNode) print(l int) {
+	tab(l)
+	fmt.Printf("node %v\n", s.node)
+	tab(l)
+	fmt.Printf("specified_values len %d\n", len(s.specified_values))
+	tab(l)
+	fmt.Printf("childrens: \n")
+	l++
+	for i := 0; i < len(s.children); i++ {
+		s.children[i].print(l + 1)
 	}
 }
 

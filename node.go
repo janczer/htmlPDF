@@ -43,10 +43,8 @@ func tab(i int) {
 func (n *Node) print(l int) {
 	tab(l)
 	l++
-	fmt.Printf("%s\n", n.node_type.element.tag_name)
+	fmt.Printf("%s text: %s\n", n.node_type.element.tag_name, n.node_type.text)
 	for i := 0; i < len(n.children); i++ {
-		tab(l)
-		fmt.Printf("%s text: %s\n", n.children[i].node_type.element.tag_name, n.children[i].node_type.text)
 		n.children[i].print(l + 1)
 	}
 }
