@@ -117,13 +117,13 @@ func NewLayoutBox(boxType interface{}, style StyleNode) *LayoutBox {
 
 func (s LayoutBox) print(l int) {
 	tab(l)
-	fmt.Printf("dimensions %v\n", s.dimensions)
+	fmt.Printf("dimensions %+v\n", s.dimensions)
 	tab(l)
 	fmt.Printf("box type %#v\n", s.box_type)
-	tab(l)
-	fmt.Printf("style %v\n", s.style)
-	tab(l)
-	fmt.Printf("childrens: \n")
+	//tab(l)
+	//fmt.Printf("style %v\n", s.style)
+	//tab(l)
+	//fmt.Printf("childrens: \n")
 	l++
 	for i := 0; i < len(s.children); i++ {
 		s.children[i].print(l + 1)
@@ -151,19 +151,23 @@ func buildLayoutTree(styleNode StyleNode) *LayoutBox {
 		style:    styleNode,
 	}
 
-	for _, child := range styleNode.children {
+	for i := 0; i < len(styleNode.children); i++ {
+		child := styleNode.children[i]
 		display = child.display()
 		switch display {
 		case "block":
 			childLayoutTree := buildLayoutTree(child)
 			l.children[len(l.children)] = childLayoutTree
 		case "inline":
-			boxT := l.getLastContainer().box_type
+			lastContainer := l.getLastContainer()
+			boxT := lastContainer.box_type
+			fmt.Printf("last container %#v\n", boxT)
 			//add anonymous box
 			switch boxT.(type) {
 			case AnonymousBlock, InlineNode:
 				childLayoutTree := buildLayoutTree(child)
-				l.children[len(l.children)] = childLayoutTree
+
+				lastContainer.children[len(lastContainer.children)] = childLayoutTree
 			case BlockNode:
 				//create AnonymousBlock
 				anonymous := LayoutBox{
@@ -237,6 +241,8 @@ func (l *LayoutBox) inlineBox(containBlock *Dimensions) {
 	l.dimensions.content.y = containBlock.content.y
 	//l.dimensions.content.y = containBlock.content.height
 	d := &l.dimensions
+
+	//calculate box width
 
 	for _, child := range l.children {
 		child.layout(d)
