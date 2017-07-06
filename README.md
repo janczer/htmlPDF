@@ -49,6 +49,7 @@ First you need create 3 files. With html tags, css style and Go code:
         htmlPDF.Generate("first.html", "style.css", "hello.pdf")
     }
 
+![render](hello.jpg)
 
 ### Todo:
 <hr>
