@@ -23,6 +23,7 @@ func Generate(html string, css string, out string) {
 
 	cssFile, err := ioutil.ReadFile(css)
 	if err != nil {
+		panic(err)
 		return
 	}
 	cssStyle := string(cssFile)
@@ -51,7 +52,7 @@ func Generate(html string, css string, out string) {
 	for i := 0; i < len(list); i++ {
 		list[i].draw(pdf)
 	}
-	err = pdf.OutputFileAndClose("hello.pdf")
+	err = pdf.OutputFileAndClose(out)
 	if err != nil {
 		fmt.Println("Error pdf", err)
 	}
